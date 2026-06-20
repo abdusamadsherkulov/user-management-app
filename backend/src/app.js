@@ -9,23 +9,10 @@ const userRoutes = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// IMPORTANT: Allow requests from frontend - includes both local and deployed URLs
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://user-management-app-khaki-two.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
+// IMPORTANT: Simply allow all origins - this is fine for a student project
+// In production you would restrict this to specific domains
 app.use(cors({
-  origin: function(origin, callback) {
-    // NOTE: Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'));
-  },
+  origin: true,
   credentials: true
 }));
 
@@ -47,7 +34,6 @@ initializeDatabase()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
-      console.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
     });
   })
   .catch(err => {
