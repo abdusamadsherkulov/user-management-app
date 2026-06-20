@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -43,6 +44,13 @@ export default function AdminPage() {
     setTimeout(() => setToast(null), 3500);
   }
 
+  function forceLogout(message) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.setItem('authError', message);
+    navigate('/login');
+  }
+
   const fetchUsers = useCallback(async () => {
     try {
       const res = await api.get('/users');
@@ -82,37 +90,78 @@ export default function AdminPage() {
     });
   }
 
-  async function handleAction(endpoint, body, successMsg) {
+  async function handleBlock() {
+    if (selected.size === 0) return;
+    const userIds = [...selected];
     setActionLoading(true);
     try {
-      const res = await api.post(`/users/${endpoint}`, body);
-      showToast(res.data.message || successMsg, 'success');
+      const res = await api.post('/users/block', { userIds });
+      showToast(res.data.message || 'Users blocked.', 'success');
+      if (userIds.includes(currentUser.id)) {
+        setTimeout(() => forceLogout('Your account has been blocked.'), 1000);
+        return;
+      }
       await fetchUsers();
     } catch (err) {
-      const msg = err.response?.data?.error || 'Action failed. Please try again.';
+      const msg = err.response?.data?.error || 'Action failed.';
       showToast(msg, 'danger');
     } finally {
       setActionLoading(false);
     }
   }
 
-  function handleBlock() {
+  async function handleUnblock() {
     if (selected.size === 0) return;
-    handleAction('block', { userIds: [...selected] }, 'Users blocked.');
+    const userIds = [...selected];
+    setActionLoading(true);
+    try {
+      const res = await api.post('/users/unblock', { userIds });
+      showToast(res.data.message || 'Users unblocked.', 'success');
+      await fetchUsers();
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Action failed.';
+      showToast(msg, 'danger');
+    } finally {
+      setActionLoading(false);
+    }
   }
 
-  function handleUnblock() {
+  async function handleDelete() {
     if (selected.size === 0) return;
-    handleAction('unblock', { userIds: [...selected] }, 'Users unblocked.');
+    const userIds = [...selected];
+    setActionLoading(true);
+    try {
+      const res = await api.post('/users/delete', { userIds });
+      showToast(res.data.message || 'Users deleted.', 'success');
+      if (userIds.includes(currentUser.id)) {
+        setTimeout(() => forceLogout('Your account has been deleted.'), 1000);
+        return;
+      }
+      await fetchUsers();
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Action failed.';
+      showToast(msg, 'danger');
+    } finally {
+      setActionLoading(false);
+    }
   }
 
-  function handleDelete() {
-    if (selected.size === 0) return;
-    handleAction('delete', { userIds: [...selected] }, 'Users deleted.');
-  }
-
-  function handleDeleteUnverified() {
-    handleAction('delete-unverified', {}, 'Unverified users deleted.');
+  async function handleDeleteUnverified() {
+    setActionLoading(true);
+    try {
+      const res = await api.post('/users/delete-unverified', {});
+      showToast(res.data.message || 'Unverified users deleted.', 'success');
+      if (currentUser.status === 'unverified') {
+        setTimeout(() => forceLogout('Your account has been deleted.'), 1000);
+        return;
+      }
+      await fetchUsers();
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Action failed.';
+      showToast(msg, 'danger');
+    } finally {
+      setActionLoading(false);
+    }
   }
 
   function handleLogout() {
@@ -127,6 +176,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-vh-100 bg-light">
+      {/* IMPORTANT: Navigation header */}
       <nav className="navbar navbar-light bg-white border-bottom shadow-sm">
         <div className="container-fluid px-4">
           <span className="navbar-brand fw-bold fs-5 mb-0">
@@ -171,7 +221,6 @@ export default function AdminPage() {
                 onClick={handleBlock}
                 disabled={noneSelected || actionLoading}
                 title="Block selected users"
-                data-bs-toggle="tooltip"
               >
                 <i className="bi bi-lock-fill me-1"></i>Block
               </button>
@@ -255,7 +304,7 @@ export default function AdminPage() {
                       <th>Status</th>
                       <th>
                         Last Login
-                        <i className="bi bi-arrow-down ms-1 text-muted small" title="Sorted by most recent"></i>
+                        <i className="bi bi-arrow-down ms-1 text-muted small"></i>
                       </th>
                       <th>Registered</th>
                     </tr>

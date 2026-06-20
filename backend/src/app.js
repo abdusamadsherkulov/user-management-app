@@ -1,4 +1,3 @@
-// IMPORTANT: Main Express application entry point.
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -9,8 +8,6 @@ const userRoutes = require('./routes/users');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// IMPORTANT: Simply allow all origins - this is fine for a student project
-// In production you would restrict this to specific domains
 app.use(cors({
   origin: true,
   credentials: true
