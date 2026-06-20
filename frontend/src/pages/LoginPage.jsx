@@ -6,7 +6,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -14,6 +14,12 @@ export default function LoginPage() {
     if (authError) {
       setError(authError);
       localStorage.removeItem('authError');
+    }
+
+    const authSuccess = localStorage.getItem('authSuccess');
+    if (authSuccess) {
+      setSuccess(authSuccess);
+      localStorage.removeItem('authSuccess');
     }
   }, []);
 
@@ -25,6 +31,7 @@ export default function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
 
     try {
@@ -54,9 +61,9 @@ export default function LoginPage() {
             </div>
           )}
 
-          {info && (
-            <div className="alert alert-info py-2 small" role="alert">
-              <i className="bi bi-info-circle me-2"></i>{info}
+          {success && (
+            <div className="alert alert-success py-2 small" role="alert">
+              <i className="bi bi-check-circle me-2"></i>{success}
             </div>
           )}
 
