@@ -51,8 +51,8 @@ export default function LoginPage() {
       <div className="card shadow-sm" style={{ width: '100%', maxWidth: '420px' }}>
         <div className="card-body p-4">
           <div className="mb-4">
-            <h4 className="fw-bold mb-1">Sign in</h4>
-            <p className="text-muted small mb-0">User Management System</p>
+            <p className="text-muted small mb-0 fw-light style={{fontFamily: 'Georgia, serif'}}">Start your journey</p>
+            <h4 className="fw-normal mb-1">Sign in to The App</h4>
           </div>
 
           {error && (
@@ -112,10 +112,10 @@ export default function LoginPage() {
 
           <hr className="my-3" />
 
-          <p className="text-center small mb-0 text-muted">
+          <p className="text-center small mb-0 text-muted fw-light">
             Don't have an account?{' '}
-            <Link to="/register" className="text-primary text-decoration-none fw-medium">
-              Register
+            <Link to="/register" className="text-primary text-decoration-none fw-light text-decoration-underline">
+              Sign up
             </Link>
           </p>
         </div>
