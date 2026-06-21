@@ -1,14 +1,11 @@
-// IMPORTANT: User management routes - ALL protected by requireAuth middleware.
 const express = require('express');
 const { pool } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// IMPORTANT: Apply auth middleware to ALL routes in this file
 router.use(requireAuth);
 
-// GET /api/users
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
@@ -23,15 +20,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/users/block
-// IMPORTANT: Save previous status before blocking so we can restore it on unblock
 router.post('/block', async (req, res) => {
   const { userIds } = req.body;
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
     return res.status(400).json({ error: 'No users selected.' });
   }
   try {
-    // NOTE: Store current status in pre_block_status before blocking
     await pool.query(
       `UPDATE users 
        SET pre_block_status = status, status = 'blocked' 
@@ -45,15 +39,12 @@ router.post('/block', async (req, res) => {
   }
 });
 
-// POST /api/users/unblock
-// IMPORTANT: Restore previous status (unverified or active) when unblocking
 router.post('/unblock', async (req, res) => {
   const { userIds } = req.body;
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
     return res.status(400).json({ error: 'No users selected.' });
   }
   try {
-    // NOTA BENE: Restore pre_block_status if available, otherwise default to 'active'
     await pool.query(
       `UPDATE users 
        SET status = COALESCE(pre_block_status, 'active'), pre_block_status = NULL
@@ -67,8 +58,6 @@ router.post('/unblock', async (req, res) => {
   }
 });
 
-// POST /api/users/delete
-// IMPORTANT: Permanently deletes users - NOT a soft delete per task requirements
 router.post('/delete', async (req, res) => {
   const { userIds } = req.body;
   if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
@@ -83,8 +72,6 @@ router.post('/delete', async (req, res) => {
   }
 });
 
-// POST /api/users/delete-unverified
-// NOTE: Deletes all users with 'unverified' status
 router.post('/delete-unverified', async (req, res) => {
   try {
     const result = await pool.query(
