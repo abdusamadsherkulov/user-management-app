@@ -48,7 +48,7 @@ async function sendVerificationEmail(email, name, token) {
     });
     console.log(`Verification email sent to ${email}`);
   } catch (err) {
-    console.error('Failed to send email:', err.message);
+    console.error('Failed to send email - full error:', JSON.stringify(err));
   }
 }
 
