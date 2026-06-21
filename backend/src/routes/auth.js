@@ -1,13 +1,10 @@
-
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 const { pool, getUniqIdValue } = require('../db');
 
 const router = express.Router();
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendVerificationEmail(email, name, token) {
   const verifyUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
@@ -17,16 +14,24 @@ async function sendVerificationEmail(email, name, token) {
   console.log(verifyUrl);
   console.log('========================================\n');
 
-  if (!process.env.RESEND_API_KEY) {
-    console.log('No RESEND_API_KEY set - email not sent, use console link above');
+  if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your_gmail@gmail.com') {
+    console.log('No email credentials set - use console link above');
     return;
   }
 
   try {
-    await resend.emails.send({
-      from: 'onboarding@resend.dev',
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: `"User Management" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: 'Verify your User Management account',
+      subject: 'Verify your account',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto;">
           <h2>Welcome, ${name}!</h2>
@@ -43,7 +48,7 @@ async function sendVerificationEmail(email, name, token) {
     });
     console.log(`Verification email sent to ${email}`);
   } catch (err) {
-    console.error('Failed to send verification email:', err.message);
+    console.error('Failed to send email:', err.message);
   }
 }
 
@@ -53,15 +58,12 @@ router.post('/register', async (req, res) => {
   if (!name || !email || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required.' });
   }
-
   if (name.trim().length === 0) {
     return res.status(400).json({ error: 'Name cannot be empty.' });
   }
-
   if (!email.includes('@')) {
     return res.status(400).json({ error: 'Please enter a valid email address.' });
   }
-
   if (password.length === 0) {
     return res.status(400).json({ error: 'Password cannot be empty.' });
   }
@@ -94,6 +96,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
