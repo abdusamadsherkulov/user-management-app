@@ -36,8 +36,8 @@ export default function RegisterPage() {
       <div className="card shadow-sm" style={{ width: '100%', maxWidth: '420px' }}>
         <div className="card-body p-4">
           <div className="mb-4">
-            <h4 className="fw-bold mb-1">Create account</h4>
-            <p className="text-muted small mb-0">User Management System</p>
+            <h4 className="fw-normal mb-1">Create account</h4>
+            <p className="text-muted small mb-0 fw-light style={{fontFamily: 'Georgia, serif'}}">to start your journey</p>
           </div>
 
           {error && (
@@ -124,9 +124,9 @@ export default function RegisterPage() {
 
           <hr className="my-3" />
 
-          <p className="text-center small mb-0 text-muted">
+          <p className="text-center small mb-0 text-muted fw-light">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary text-decoration-none fw-medium">
+            <Link to="/login" className="text-primary text-decoration-underline fw-light">
               Sign in
             </Link>
           </p>
