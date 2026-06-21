@@ -12,23 +12,32 @@ async function sendVerificationEmail(email, name, token) {
   console.log('\n========================================');
   console.log('EMAIL VERIFICATION LINK:');
   console.log(verifyUrl);
+  console.log('Attempting to send to:', email);
+  console.log('Using Gmail account:', process.env.EMAIL_USER);
   console.log('========================================\n');
 
   if (!process.env.EMAIL_USER || process.env.EMAIL_USER === 'your_gmail@gmail.com') {
-    console.log('No email credentials set - use console link above');
+    console.log('No email credentials - skipping send');
     return;
   }
 
   try {
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-      }
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
     });
 
-    await transporter.sendMail({
+    console.log('Transporter created, sending email...');
+
+    const info = await transporter.sendMail({
       from: `"User Management" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Verify your account',
@@ -42,13 +51,15 @@ async function sendVerificationEmail(email, name, token) {
           <p style="margin-top:16px;color:#666;font-size:13px;">
             Or copy this link: <a href="${verifyUrl}">${verifyUrl}</a>
           </p>
-          <p style="color:#999;font-size:12px;">If you did not register, ignore this email.</p>
         </div>
       `
     });
-    console.log(`Verification email sent to ${email}`);
+
+    console.log('Email sent successfully! Message ID:', info.messageId);
   } catch (err) {
-    console.error('Failed to send email - full error:', JSON.stringify(err));
+    console.error('Email send FAILED:', err.message);
+    console.error('Error code:', err.code);
+    console.error('Error response:', err.response);
   }
 }
 
@@ -80,7 +91,6 @@ router.post('/register', async (req, res) => {
     );
 
     const newUser = result.rows[0];
-
     sendVerificationEmail(email, name, verificationToken).catch(console.error);
 
     res.status(201).json({
@@ -96,7 +106,6 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
